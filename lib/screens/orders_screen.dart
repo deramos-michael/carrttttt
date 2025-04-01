@@ -2,7 +2,7 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
-import 'order_detail_screen.dart';  // Fixed import path
+import 'order_detail_screen.dart';
 
 class OrdersScreen extends StatefulWidget {
   const OrdersScreen({Key? key}) : super(key: key);
@@ -60,6 +60,89 @@ class _OrdersScreenState extends State<OrdersScreen> {
     );
   }
 
+  // THIS IS WHERE YOUR _buildOrderItem METHOD GOES
+  Widget _buildOrderItem(BuildContext context, Map<String, dynamic> order) {
+    final itemsCount = int.tryParse(order['items_count'].toString()) ?? 0;
+
+    return Card(
+      margin: const EdgeInsets.all(8),
+      child: CupertinoButton(
+        padding: EdgeInsets.zero,
+        onPressed: () {
+          Navigator.push(
+            context,
+            CupertinoPageRoute(
+              builder: (context) => OrderDetailScreen(orderId: order['id']),
+            ),
+          );
+        },
+        child: Container(
+          padding: const EdgeInsets.all(16),
+          child: Row(
+            children: [
+              Container(
+                width: 50,
+                height: 50,
+                decoration: BoxDecoration(
+                  color: CupertinoColors.systemGrey6,
+                  borderRadius: BorderRadius.circular(25),
+                ),
+                child: Stack(
+                  alignment: Alignment.center,
+                  children: [
+                    const Icon(CupertinoIcons.cart, size: 24),
+                    if (itemsCount > 0)
+                      Positioned(
+                        right: 0,
+                        top: 0,
+                        child: Container(
+                          padding: const EdgeInsets.all(4),
+                          decoration: const BoxDecoration(
+                            color: CupertinoColors.systemRed,
+                            shape: BoxShape.circle,
+                          ),
+                          child: Text(
+                            itemsCount.toString(),
+                            style: const TextStyle(
+                              color: CupertinoColors.white,
+                              fontSize: 12,
+                            ),
+                          ),
+                        ),
+                      ),
+                  ],
+                ),
+              ),
+              const SizedBox(width: 16),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Order #${order['id']}',
+                      style: const TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 16,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      'Total: \$${double.tryParse(order['total'].toString())?.toStringAsFixed(2) ?? '0.00'}',
+                      style: TextStyle(
+                        color: CupertinoColors.secondaryLabel,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const Icon(CupertinoIcons.chevron_right),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return CupertinoPageScaffold(
@@ -68,69 +151,18 @@ class _OrdersScreenState extends State<OrdersScreen> {
       ),
       child: _isLoading
           ? const Center(child: CupertinoActivityIndicator())
-          : RefreshIndicator(
-        onRefresh: _fetchOrders,
-        child: ListView.builder(
-          itemCount: _orders.length,
-          itemBuilder: (context, index) {
-            final order = _orders[index];
-            return _buildOrderItem(context, order);
-          },
-        ),
-      ),
-    );
-  }
-
-  Widget _buildOrderItem(BuildContext context, Map<String, dynamic> order) {
-    return CupertinoButton(
-      padding: EdgeInsets.zero,
-      onPressed: () {
-        Navigator.push(
-          context,
-          CupertinoPageRoute(
-            builder: (context) => OrderDetailScreen(orderId: order['id']),  // Fixed class name
+          : CustomScrollView(
+        slivers: [
+          CupertinoSliverRefreshControl(
+            onRefresh: _fetchOrders,
           ),
-        );
-      },
-      child: Container(
-        padding: const EdgeInsets.all(16),
-        decoration: BoxDecoration(
-          border: Border(
-            bottom: BorderSide(
-              color: CupertinoColors.lightBackgroundGray,
-              width: 0.5,
+          SliverList(
+            delegate: SliverChildBuilderDelegate(
+                  (context, index) => _buildOrderItem(context, _orders[index]),
+              childCount: _orders.length,
             ),
           ),
-        ),
-        child: Row(
-          children: [
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    'Order #${order['id']}',
-                    style: const TextStyle(
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                  const SizedBox(height: 4),
-                  Text(
-                    '${order['items_count']} items',
-                    style: TextStyle(
-                      color: CupertinoColors.secondaryLabel,
-                    ),
-                  ),
-                  const SizedBox(height: 4),
-                  Text(
-                    'Total: \$${double.parse(order['total'].toString()).toStringAsFixed(2)}',
-                  ),
-                ],
-              ),
-            ),
-            const Icon(CupertinoIcons.chevron_right),
-          ],
-        ),
+        ],
       ),
     );
   }

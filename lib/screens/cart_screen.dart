@@ -10,14 +10,14 @@ class CartScreen extends StatelessWidget {
 
   // Map product IDs to their corresponding image paths (same as in ProductsScreen)
   final Map<int, String> _productImages = {
-    2: 'images/macbook.jpg',
+    2: 'images/Macbookair.jpg',
     3: 'images/airpods.jpg',
-    4: 'images/apple_watch.jpg',
-    5: 'images/ipad.jpg',
+    4: 'images/AppleWatch.jpg',
+    5: 'images/iPadAir.jpg',
     6: 'images/keyboard.jpg',
-    7: 'images/apple_pencil.jpg',
-    8: 'images/homepod.jpg',
-    10: 'images/sobnang.jpg',
+    7: 'images/PencilApple.jpg',
+    8: 'images/Homepod.jpg',
+    10: 'images/iPhone16.jpg',
   };
 
   @override
