@@ -14,7 +14,7 @@ class Product {
   });
 
   factory Product.fromJson(Map<String, dynamic> json) {
-    // Debug prints to check incoming data
+    //Debug prints to check incoming data
     print('Raw product data: $json');
 
     return Product(

@@ -92,9 +92,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
       print("Error: $e"); // Log error
       _showErrorDialog(e.toString());
     }
-    catch (e) {
-      _showErrorDialog(e.toString());
-    } finally {
+    finally {
       setState(() {
         _isProcessing = false;
       });
@@ -277,7 +275,9 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                 color: CupertinoTheme.of(context).primaryColor,
                 child: _isProcessing
                     ? const CupertinoActivityIndicator()
-                    : const Text('Complete Order'),
+                    : const Text('Complete Order',
+                    style: TextStyle(color: CupertinoColors.white),),
+
                 onPressed: _isProcessing ? null : _processOrder,
               ),
             ],

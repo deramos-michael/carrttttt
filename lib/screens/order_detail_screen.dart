@@ -18,7 +18,6 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
   bool _isLoading = true;
   double _orderTotal = 0.0;
 
-  // Product images mapping
   final Map<int, String> _productImages = {
     2: 'images/macbook.jpg',
     3: 'images/airpods.jpg',
@@ -37,23 +36,27 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
   }
 
   Future<void> _fetchOrderDetails() async {
-    setState(() {
-      _isLoading = true;
-    });
+    setState(() => _isLoading = true);
 
     try {
       final response = await http.get(
         Uri.parse('https://warehousemanagementsystem.shop/api.php/order_details?id=${widget.orderId}'),
       );
 
-     // print('Response Code: ${response.statusCode}');
-     // print('Response Body: ${response.body}');
-
       if (response.statusCode == 200) {
         final data = json.decode(response.body);
+        print("API Response: $data");
+
         setState(() {
-          _orderItems = List<Map<String, dynamic>>.from(data['items']);
-          _orderTotal = double.tryParse(data['total'].toString()) ?? 0.0;
+          _orderItems = (data['items'] as List?)?.map((item) {
+            return {
+              'product': Product.fromJson(item['product']),
+              'quantity': item['quantity'],
+              'price': double.tryParse(item['price']?.toString() ?? '0.0') ?? 0.0,
+            };
+          }).toList() ?? [];
+
+          _orderTotal = double.tryParse(data['total']?.toString() ?? '0.0') ?? 0.0;
           _isLoading = false;
         });
       } else {
@@ -61,9 +64,7 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
       }
     } catch (e) {
       print("Error: $e");
-      setState(() {
-        _isLoading = false;
-      });
+      setState(() => _isLoading = false);
       _showErrorDialog(e.toString());
     }
   }
@@ -85,24 +86,20 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
   }
 
   Widget _buildOrderItem(Map<String, dynamic> item) {
-    final product = Product.fromJson(item['product']);
+    final product = item['product'] as Product;
     final imagePath = _productImages[product.id];
     final quantity = item['quantity'] as int;
-    final price = double.tryParse(item['price'].toString()) ?? 0.0;
+    final price = item['price'] as double;
 
     return Container(
       padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
       decoration: BoxDecoration(
         border: Border(
-          bottom: BorderSide(
-            color: CupertinoColors.lightBackgroundGray,
-            width: 0.5,
-          ),
+          bottom: BorderSide(color: CupertinoColors.lightBackgroundGray, width: 0.5),
         ),
       ),
       child: Row(
         children: [
-          // Product image
           Container(
             width: 60,
             height: 60,
@@ -110,12 +107,7 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
             child: ClipRRect(
               borderRadius: BorderRadius.circular(8),
               child: imagePath != null
-                  ? Image.asset(
-                imagePath,
-                fit: BoxFit.cover,
-                errorBuilder: (context, error, stackTrace) =>
-                const Icon(CupertinoIcons.photo, size: 30),
-              )
+                  ? Image.asset(imagePath, fit: BoxFit.cover, errorBuilder: (context, error, stackTrace) => const Icon(CupertinoIcons.photo, size: 30))
                   : const Icon(CupertinoIcons.photo, size: 30),
             ),
           ),
@@ -125,9 +117,7 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
               children: [
                 Text(
                   product.name,
-                  style: const TextStyle(
-                    fontWeight: FontWeight.bold,
-                  ),
+                  style: const TextStyle(fontWeight: FontWeight.bold),
                 ),
                 const SizedBox(height: 4),
                 Text('$quantity × \$${price.toStringAsFixed(2)}'),
@@ -136,9 +126,7 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
           ),
           Text(
             '\$${(quantity * price).toStringAsFixed(2)}',
-            style: const TextStyle(
-              fontWeight: FontWeight.bold,
-            ),
+            style: const TextStyle(fontWeight: FontWeight.bold),
           ),
         ],
       ),
@@ -157,9 +145,7 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
             ? const Center(child: CupertinoActivityIndicator())
             : CustomScrollView(
           slivers: [
-            CupertinoSliverRefreshControl(
-              onRefresh: _fetchOrderDetails,
-            ),
+            CupertinoSliverRefreshControl(onRefresh: _fetchOrderDetails),
             SliverList(
               delegate: SliverChildListDelegate([
                 ..._orderItems.map(_buildOrderItem).toList(),
@@ -170,17 +156,11 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
                     children: [
                       const Text(
                         'Order Total:',
-                        style: TextStyle(
-                          fontWeight: FontWeight.bold,
-                          fontSize: 18,
-                        ),
+                        style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
                       ),
                       Text(
                         '\$${_orderTotal.toStringAsFixed(2)}',
-                        style: const TextStyle(
-                          fontWeight: FontWeight.bold,
-                          fontSize: 18,
-                        ),
+                        style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
                       ),
                     ],
                   ),

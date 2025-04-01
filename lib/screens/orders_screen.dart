@@ -81,7 +81,8 @@ class _OrdersScreenState extends State<OrdersScreen> {
           Navigator.push(
             context,
             CupertinoPageRoute(
-              builder: (context) => OrderDetailScreen(orderId: order['id']),
+              builder: (context) => OrderDetailScreen(orderId: int.tryParse(order['id'].toString()) ?? 0),
+
             ),
           );
         },
