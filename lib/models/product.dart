@@ -15,7 +15,7 @@ class Product {
 
   factory Product.fromJson(Map<String, dynamic> json) {
     //Debug prints to check incoming data
-    print('Raw product data: $json');
+
 
     return Product(
       id: int.tryParse(json['id'].toString()) ?? 0,
