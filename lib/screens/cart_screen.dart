@@ -3,12 +3,16 @@ import 'package:flutter/material.dart';
 import '../../models/cart.dart';
 import 'checkout_screen.dart';
 
-class CartScreen extends StatelessWidget {
+class CartScreen extends StatefulWidget {
   final Cart cart;
 
   CartScreen({Key? key, required this.cart}) : super(key: key);
 
-  // Map product IDs to their corresponding image paths (same as in ProductsScreen)
+  @override
+  _CartScreenState createState() => _CartScreenState();
+}
+
+class _CartScreenState extends State<CartScreen> {
   final Map<int, String> _productImages = {
     2: 'images/Macbookair.jpg',
     3: 'images/airpods.jpg',
@@ -25,7 +29,7 @@ class CartScreen extends StatelessWidget {
     return CupertinoPageScaffold(
       navigationBar: CupertinoNavigationBar(
         middle: const Text('Your Cart'),
-        trailing: cart.items.isNotEmpty
+        trailing: widget.cart.items.isNotEmpty
             ? CupertinoButton(
           padding: EdgeInsets.zero,
           child: const Text('Checkout'),
@@ -33,7 +37,7 @@ class CartScreen extends StatelessWidget {
             Navigator.push(
               context,
               CupertinoPageRoute(
-                builder: (context) => CheckoutScreen(cart: cart),
+                builder: (context) => CheckoutScreen(cart: widget.cart),
               ),
             );
           },
@@ -44,82 +48,26 @@ class CartScreen extends StatelessWidget {
         child: Column(
           children: [
             Expanded(
-              child: cart.items.isEmpty
-                  ? const Center(
-                child: Text('Your cart is empty'),
-              )
+              child: widget.cart.items.isEmpty
+                  ? const Center(child: Text('Your cart is empty'))
                   : ListView.builder(
-                itemCount: cart.items.length,
+                itemCount: widget.cart.items.length,
                 itemBuilder: (context, index) {
-                  final item = cart.items[index];
-                  return _buildCartItem(context, item, cart);
+                  final item = widget.cart.items[index];
+                  return _buildCartItem(item);
                 },
               ),
             ),
-            if (cart.items.isNotEmpty)
-              Container(
-                padding: const EdgeInsets.all(16),
-                decoration: BoxDecoration(
-                  color: CupertinoColors.extraLightBackgroundGray,
-                  border: Border(
-                    top: BorderSide(
-                      color: CupertinoColors.lightBackgroundGray,
-                      width: 0.5,
-                    ),
-                  ),
-                ),
-                child: Column(
-                  children: [
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        const Text(
-                          'Total:',
-                          style: TextStyle(
-                            fontWeight: FontWeight.bold,
-                            fontSize: 18,
-                          ),
-                        ),
-                        Text(
-                          '\$${cart.totalAmount.toStringAsFixed(2)}',
-                          style: const TextStyle(
-                            fontWeight: FontWeight.bold,
-                            fontSize: 18,
-                          ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 16),
-                    SizedBox(
-                      width: double.infinity,
-                      child: CupertinoButton(
-                        color: CupertinoTheme.of(context).primaryColor,
-                        child: const Text('Proceed to Checkout',
-                            style: TextStyle(color: CupertinoColors.white),
-                      ),
-
-                        onPressed: () {
-                          Navigator.push(
-                            context,
-                            CupertinoPageRoute(
-                              builder: (context) => CheckoutScreen(cart: cart),
-                            ),
-                          );
-                        },
-                      ),
-                    ),
-                  ],
-                ),
-              ),
+            if (widget.cart.items.isNotEmpty)
+              _buildTotalSection(),
           ],
         ),
       ),
     );
   }
 
-  Widget _buildCartItem(BuildContext context, CartItem item, Cart cart) {
+  Widget _buildCartItem(CartItem item) {
     final imagePath = _productImages[item.product.id];
-
     return Dismissible(
       key: Key(item.product.id.toString()),
       direction: DismissDirection.endToStart,
@@ -127,13 +75,12 @@ class CartScreen extends StatelessWidget {
         color: CupertinoColors.destructiveRed,
         alignment: Alignment.centerRight,
         padding: const EdgeInsets.only(right: 20),
-        child: const Icon(
-          CupertinoIcons.delete,
-          color: CupertinoColors.white,
-        ),
+        child: const Icon(CupertinoIcons.delete, color: CupertinoColors.white),
       ),
       onDismissed: (direction) {
-        cart.removeItem(item.product.id);
+        setState(() {
+          widget.cart.removeItem(item.product.id);
+        });
       },
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
@@ -147,7 +94,6 @@ class CartScreen extends StatelessWidget {
         ),
         child: Row(
           children: [
-            // Added product image
             Container(
               width: 60,
               height: 60,
@@ -170,9 +116,7 @@ class CartScreen extends StatelessWidget {
                 children: [
                   Text(
                     item.product.name,
-                    style: const TextStyle(
-                      fontWeight: FontWeight.bold,
-                    ),
+                    style: const TextStyle(fontWeight: FontWeight.bold),
                   ),
                   const SizedBox(height: 4),
                   Text('\$${item.product.price.toStringAsFixed(2)}'),
@@ -186,10 +130,11 @@ class CartScreen extends StatelessWidget {
                   minSize: 0,
                   child: const Icon(CupertinoIcons.minus_circled),
                   onPressed: () {
-                    cart.updateQuantity(
-                      item.product.id,
-                      item.quantity - 1,
-                    );
+                    if (item.quantity > 1) {
+                      setState(() {
+                        widget.cart.updateQuantity(item.product.id, item.quantity - 1);
+                      });
+                    }
                   },
                 ),
                 Padding(
@@ -202,10 +147,9 @@ class CartScreen extends StatelessWidget {
                   child: const Icon(CupertinoIcons.plus_circled),
                   onPressed: () {
                     if (item.quantity < item.product.stock) {
-                      cart.updateQuantity(
-                        item.product.id,
-                        item.quantity + 1,
-                      );
+                      setState(() {
+                        widget.cart.updateQuantity(item.product.id, item.quantity + 1);
+                      });
                     }
                   },
                 ),
@@ -213,6 +157,52 @@ class CartScreen extends StatelessWidget {
             ),
           ],
         ),
+      ),
+    );
+  }
+
+  Widget _buildTotalSection() {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: CupertinoColors.extraLightBackgroundGray,
+        border: Border(
+          top: BorderSide(color: CupertinoColors.lightBackgroundGray, width: 0.5),
+        ),
+      ),
+      child: Column(
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              const Text(
+                'Total:',
+                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
+              ),
+              Text(
+                '\$${widget.cart.totalAmount.toStringAsFixed(2)}',
+                style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
+              ),
+            ],
+          ),
+          const SizedBox(height: 16),
+          SizedBox(
+            width: double.infinity,
+            child: CupertinoButton(
+              color: CupertinoTheme.of(context).primaryColor,
+              child: const Text('Proceed to Checkout',
+                  style: TextStyle(color: CupertinoColors.white)),
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  CupertinoPageRoute(
+                    builder: (context) => CheckoutScreen(cart: widget.cart),
+                  ),
+                );
+              },
+            ),
+          ),
+        ],
       ),
     );
   }
