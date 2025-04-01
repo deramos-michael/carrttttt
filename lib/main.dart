@@ -6,7 +6,9 @@ import 'screens/cart_screen.dart';
 import 'screens/orders_screen.dart';
 
 void main() {
-  runApp(const MyApp());
+  runApp(const MyApp(
+
+  ));
 }
 
 class MyApp extends StatelessWidget {
@@ -14,7 +16,9 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+
     return const CupertinoApp(
+      debugShowCheckedModeBanner: false,
       title: 'Ordering System',
       theme: CupertinoThemeData(
         primaryColor: CupertinoColors.systemBlue,
