@@ -22,7 +22,6 @@ class ProductDetailScreen extends StatefulWidget {
 
 class _ProductDetailScreenState extends State<ProductDetailScreen> {
   late Product product;
-  bool _isLoading = false;
   late Timer _timer;
 
   // Match the product images mapping from ProductsScreen
@@ -58,10 +57,6 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
   }
 
   Future<void> _fetchProductDetails() async {
-    setState(() {
-      _isLoading = true;
-    });
-
     try {
       final response = await http.get(
         Uri.parse('https://warehousemanagementsystem.shop/api.php/products/${product.id}'),
@@ -71,17 +66,50 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
         final Map<String, dynamic> data = json.decode(response.body);
         setState(() {
           product = Product.fromJson(data);
-          _isLoading = false;
         });
+
+        // Show an alert when stock changes (optional)
+        _showStockStatusAlert();
       } else {
         throw Exception('Failed to load product details.');
       }
     } catch (e) {
       print("Error: $e");
-      setState(() {
-        _isLoading = false;
-      });
     }
+  }
+
+  // Function to determine and show alerts for stock status
+  void _showStockStatusAlert() {
+    String stockStatus = '';
+    if (product.stock == 0) {
+      stockStatus = "Out of Stock";
+    } else if (product.stock <= 20) {
+      stockStatus = "Low Stock";
+    } else if (product.stock >= 100) {
+      stockStatus = "High Stock";
+    } else {
+      stockStatus = "In Stock";
+    }
+
+    // Show an alert based on stock status
+    CupertinoAlertDialog alertDialog = CupertinoAlertDialog(
+      title: Text('Stock Status'),
+      content: Text('The product is currently: $stockStatus'),
+      actions: [
+        CupertinoDialogAction(
+          child: Text('OK'),
+          onPressed: () {
+            Navigator.of(context).pop();
+          },
+        ),
+      ],
+    );
+
+    // Show the alert only if stock status changes
+    showCupertinoDialog(
+      context: context,
+      builder: (context) => alertDialog,
+    );
   }
 
   @override
@@ -104,6 +132,8 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                     ? Image.asset(
                   imagePath,
                   fit: BoxFit.cover,
+                  width: double.infinity,
+                  height: double.infinity,
                   errorBuilder: (context, error, stackTrace) =>
                   const Icon(CupertinoIcons.photo, size: 100),
                 )
@@ -131,23 +161,21 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                       ),
                     ),
                     const SizedBox(height: 16),
-                    // Stock section with loading spinner
+                    // Stock section without loading spinner
                     Row(
                       children: [
-                        const Text(
-                          'Stock: ',
-                          style: TextStyle(
-                            fontSize: 16,
-                            color: CupertinoColors.secondaryLabel,
-                          ),
+                        Icon(
+                          CupertinoIcons.circle_filled,
+                          size: 14,
+                          color: _getStockColor(),
                         ),
-                        _isLoading
-                            ? CupertinoActivityIndicator(radius: 10)
-                            : Text(
-                          '${product.stock}',
-                          style: const TextStyle(
+                        const SizedBox(width: 6),
+                        Text(
+                          _getStockStatus(),
+                          style: TextStyle(
+                            color: _getStockColor(),
+                            fontWeight: FontWeight.w500,
                             fontSize: 16,
-                            color: CupertinoColors.secondaryLabel,
                           ),
                         ),
                       ],
@@ -160,7 +188,7 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                         child: const Text('Add to Cart',
                           style: TextStyle(color: CupertinoColors.white),
                         ),
-                          onPressed: () {
+                        onPressed: () {
                           widget.cart.addItem(product);
                           Navigator.of(context).pop(true); // Returning true to refresh
                         },
@@ -174,5 +202,31 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
         ),
       ),
     );
+  }
+
+  // Get the color based on stock
+  Color _getStockColor() {
+    if (product.stock == 0) {
+      return CupertinoColors.systemRed;
+    } else if (product.stock <= 20) {
+      return CupertinoColors.systemOrange;
+    } else if (product.stock >= 100) {
+      return CupertinoColors.systemGreen;
+    } else {
+      return CupertinoColors.secondaryLabel;
+    }
+  }
+
+  // Get the stock status text based on stock
+  String _getStockStatus() {
+    if (product.stock == 0) {
+      return "Out of Stock";
+    } else if (product.stock <= 20) {
+      return "Low Stock (${product.stock})";
+    } else if (product.stock >= 100) {
+      return "High Stock (${product.stock})";
+    } else {
+      return "In Stock (${product.stock})";
+    }
   }
 }

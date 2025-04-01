@@ -98,45 +98,55 @@ class _ProductsScreenState extends State<ProductsScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return CupertinoPageScaffold(
-      navigationBar: const CupertinoNavigationBar(
-        middle: Text('Products'),
-      ),
-      child: _isLoading
-          ? const Center(child: CupertinoActivityIndicator()) // Show loading indicator on initial load or fetch
-          : Padding(
-        padding: const EdgeInsets.symmetric(vertical: 32.0, horizontal: 20.0), // Increased vertical padding for more space
-        child: CustomScrollView(
-          slivers: [
-            CupertinoSliverRefreshControl(
-              onRefresh: () async {
-                _fetchProducts(showLoading: true); // Show loading on manual refresh
-              },
-            ),
-            SliverToBoxAdapter(
-              child: SizedBox(height: 32), // Increased space before the grid
-            ),
-            SliverGrid(
-              // Adjust the number of items per row based on the screen width
-              gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                crossAxisCount: _getGridItemCount(context), // Responsive grid
-                crossAxisSpacing: 16,  // Adjusted spacing between items
-                mainAxisSpacing: 16,    // Increased vertical spacing between rows
-                childAspectRatio: 0.75,
-              ),
-              delegate: SliverChildBuilderDelegate(
-                    (context, index) => _buildProductCard(context, _products[index]),
-                childCount: _products.length,
-              ),
-            ),
-            // Add extra space below the grid
-            SliverToBoxAdapter(
-              child: SizedBox(height: 32), // Increased bottom space
-            ),
-          ],
+    return
+      CupertinoPageScaffold(
+        navigationBar: CupertinoNavigationBar(
+          middle: const Text('Products'),
+          trailing: CupertinoButton(
+            padding: EdgeInsets.zero,
+            onPressed: () {
+              // Action for the plus icon, for example, navigate to another page or open a dialog
+              print("Plus icon clicked");
+            },
+            child: const Icon(CupertinoIcons.add),
+          ),
         ),
-      ),
-    );
+        child: _isLoading
+            ? const Center(child: CupertinoActivityIndicator()) // Show loading indicator on initial load or fetch
+            : Padding(
+          padding: const EdgeInsets.symmetric(vertical: 32.0, horizontal: 20.0), // Increased vertical padding for more space
+          child: CustomScrollView(
+            slivers: [
+              CupertinoSliverRefreshControl(
+                onRefresh: () async {
+                  _fetchProducts(showLoading: true); // Show loading on manual refresh
+                },
+              ),
+              SliverToBoxAdapter(
+                child: SizedBox(height: 32), // Increased space before the grid
+              ),
+              SliverGrid(
+                // Adjust the number of items per row based on the screen width
+                gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                  crossAxisCount: _getGridItemCount(context), // Responsive grid
+                  crossAxisSpacing: 16,  // Adjusted spacing between items
+                  mainAxisSpacing: 16,    // Increased vertical spacing between rows
+                  childAspectRatio: 0.75,
+                ),
+                delegate: SliverChildBuilderDelegate(
+                      (context, index) => _buildProductCard(context, _products[index]),
+                  childCount: _products.length,
+                ),
+              ),
+              // Add extra space below the grid
+              SliverToBoxAdapter(
+                child: SizedBox(height: 32), // Increased bottom space
+              ),
+            ],
+          ),
+        ),
+      );
+
   }
 
   // Function to return grid item count based on screen size
@@ -158,9 +168,32 @@ class _ProductsScreenState extends State<ProductsScreen> {
   Widget _buildProductCard(BuildContext context, Product product) {
     final imagePath = _productImages[product.id];
 
+    // Determine stock status and color
+    Color stockColor;
+    String stockStatus;
+    String stockQuantity = '';
+
+    if (product.stock == 0) {
+      stockColor = CupertinoColors.systemRed;
+      stockStatus = "Out of Stock";
+    } else if (product.stock <= 20) {
+      stockColor = CupertinoColors.systemOrange;
+      stockStatus = "Low Stock";
+      stockQuantity = "(${product.stock})"; // Show quantity for low stock
+    } else if (product.stock >= 100) {
+      stockColor = CupertinoColors.systemGreen;
+      stockStatus = "High Stock";
+      stockQuantity = "(${product.stock})"; // Show quantity for high stock
+    } else {
+      stockColor = CupertinoColors.secondaryLabel;
+      stockStatus = "In Stock";
+      stockQuantity = "(${product.stock})"; // Show quantity for normal stock
+    }
+
     return CupertinoButton(
       padding: EdgeInsets.zero,
-      onPressed: () async {
+      onPressed: product.stock > 0 // Disable if out of stock
+          ? () async {
         final result = await Navigator.push(
           context,
           CupertinoPageRoute(
@@ -174,13 +207,14 @@ class _ProductsScreenState extends State<ProductsScreen> {
         if (result == true) {
           _fetchProducts(showLoading: true); // Refresh products after purchase
         }
-      },
+      }
+          : null, // Disable button if out of stock
       child: Card(
-        elevation: 5, // Add shadow to the card for better contrast
+        elevation: 5,
         shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(16), // Round corners for a smoother look
+          borderRadius: BorderRadius.circular(16),
         ),
-        clipBehavior: Clip.antiAlias, // Smooth the edges of images and content
+        clipBehavior: Clip.antiAlias,
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -192,7 +226,7 @@ class _ProductsScreenState extends State<ProductsScreen> {
                   imagePath,
                   fit: BoxFit.cover,
                   width: double.infinity,
-                  height: double.infinity, // Make image fill the space
+                  height: double.infinity,
                   errorBuilder: (context, error, stackTrace) =>
                   const Icon(CupertinoIcons.photo, size: 100),
                 )
@@ -200,7 +234,7 @@ class _ProductsScreenState extends State<ProductsScreen> {
               ),
             ),
             Padding(
-              padding: const EdgeInsets.all(16.0), // Increased padding inside the card
+              padding: const EdgeInsets.all(16.0),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
@@ -208,7 +242,7 @@ class _ProductsScreenState extends State<ProductsScreen> {
                     product.name,
                     style: const TextStyle(
                       fontWeight: FontWeight.bold,
-                      fontSize: 18, // Increased font size for better readability
+                      fontSize: 18,
                     ),
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
@@ -219,24 +253,36 @@ class _ProductsScreenState extends State<ProductsScreen> {
                     style: TextStyle(
                       color: CupertinoTheme.of(context).primaryColor,
                       fontWeight: FontWeight.bold,
-                      fontSize: 18, // Increased font size for better readability
+                      fontSize: 18,
                     ),
                   ),
                   const SizedBox(height: 8),
-                  Text(
-                    'Stock: ${product.stock}',
-                    style: const TextStyle(
-                      color: CupertinoColors.secondaryLabel,
-                      fontSize: 16, // Slightly larger text
-                    ),
+                  Row(
+                    children: [
+                      Icon(
+                        CupertinoIcons.circle_filled,
+                        size: 14,
+                        color: stockColor,
+                      ),
+                      const SizedBox(width: 6),
+                      Text(
+                        '$stockStatus $stockQuantity', // Display quantity next to status
+                        style: TextStyle(
+                          color: stockColor,
+                          fontWeight: FontWeight.w500,
+                          fontSize: 16,
+                        ),
+                      ),
+                    ],
                   ),
                 ],
               ),
             ),
-            const SizedBox(height: 24), // Increased space below the card
+            const SizedBox(height: 24),
           ],
         ),
       ),
     );
   }
+
 }
