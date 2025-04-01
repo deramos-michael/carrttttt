@@ -157,8 +157,10 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                       width: double.infinity,
                       child: CupertinoButton(
                         color: CupertinoTheme.of(context).primaryColor,
-                        child: const Text('Add to Cart'),
-                        onPressed: () {
+                        child: const Text('Add to Cart',
+                          style: TextStyle(color: CupertinoColors.white),
+                        ),
+                          onPressed: () {
                           widget.cart.addItem(product);
                           Navigator.of(context).pop(true); // Returning true to refresh
                         },

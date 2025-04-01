@@ -94,7 +94,10 @@ class CartScreen extends StatelessWidget {
                       width: double.infinity,
                       child: CupertinoButton(
                         color: CupertinoTheme.of(context).primaryColor,
-                        child: const Text('Proceed to Checkout'),
+                        child: const Text('Proceed to Checkout',
+                            style: TextStyle(color: CupertinoColors.white),
+                      ),
+
                         onPressed: () {
                           Navigator.push(
                             context,
