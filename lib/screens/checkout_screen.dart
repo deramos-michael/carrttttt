@@ -61,7 +61,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
 
     try {
       final response = await http.post(
-        Uri.parse('http://192.168.0.25/api.php/purchase'),
+        Uri.parse('https://warehousemanagementsystem.shop/api.php/purchase'),
         headers: {'Content-Type': 'application/json'},
         body: json.encode({
           'total': widget.cart.totalAmount,
@@ -74,6 +74,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
           }).toList(),
         }),
       );
+      print('Response: ${response.body}'); // Debug response
 
       if (response.statusCode == 200) {
         final responseData = json.decode(response.body);
@@ -88,6 +89,10 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
         throw Exception('Failed to process order');
       }
     } catch (e) {
+      print("Error: $e"); // Log error
+      _showErrorDialog(e.toString());
+    }
+    catch (e) {
       _showErrorDialog(e.toString());
     } finally {
       setState(() {

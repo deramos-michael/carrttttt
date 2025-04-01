@@ -1,3 +1,4 @@
+import 'dart:async'; // Import Timer
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
@@ -13,32 +14,40 @@ class OrdersScreen extends StatefulWidget {
 
 class _OrdersScreenState extends State<OrdersScreen> {
   List<dynamic> _orders = [];
-  bool _isLoading = true;
+  bool _isLoading = true;  // Control loading state
+  late Timer _timer;
 
   @override
   void initState() {
     super.initState();
     _fetchOrders();
+    // Set up periodic refresh every 3 seconds (or desired interval)
+    _timer = Timer.periodic(const Duration(seconds: 3), (Timer t) {
+      _fetchOrders(); // Automatically fetch orders every 3 seconds
+    });
+  }
+
+  @override
+  void dispose() {
+    _timer.cancel(); // Don't forget to cancel the timer when the screen is disposed
+    super.dispose();
   }
 
   Future<void> _fetchOrders() async {
-    setState(() {
-      _isLoading = true;
-    });
-
     try {
-      final response = await http.get(Uri.parse('http://192.168.0.25/api.php/orders'));
+      final response = await http.get(Uri.parse('http://warehousemanagementsystem.shop/api.php/orders'));
       if (response.statusCode == 200) {
         setState(() {
           _orders = json.decode(response.body);
-          _isLoading = false;
+          _isLoading = false; // Set loading to false after fetching
         });
       } else {
         throw Exception('Failed to load orders');
       }
     } catch (e) {
+      print("Error: $e");
       setState(() {
-        _isLoading = false;
+        _isLoading = false; // Set loading to false if there's an error
       });
       _showErrorDialog(e.toString());
     }
@@ -60,7 +69,7 @@ class _OrdersScreenState extends State<OrdersScreen> {
     );
   }
 
-  // THIS IS WHERE YOUR _buildOrderItem METHOD GOES
+  // Build order item widget
   Widget _buildOrderItem(BuildContext context, Map<String, dynamic> order) {
     final itemsCount = int.tryParse(order['items_count'].toString()) ?? 0;
 
@@ -150,19 +159,27 @@ class _OrdersScreenState extends State<OrdersScreen> {
         middle: Text('Your Orders'),
       ),
       child: _isLoading
-          ? const Center(child: CupertinoActivityIndicator())
-          : CustomScrollView(
-        slivers: [
-          CupertinoSliverRefreshControl(
-            onRefresh: _fetchOrders,
-          ),
-          SliverList(
-            delegate: SliverChildBuilderDelegate(
-                  (context, index) => _buildOrderItem(context, _orders[index]),
-              childCount: _orders.length,
+          ? const Center(child: CupertinoActivityIndicator()) // Show loading indicator on initial load or fetch
+          : Padding(
+        padding: const EdgeInsets.symmetric(vertical: 40.0), // Adjusted padding
+        child: CustomScrollView(
+          slivers: [
+            CupertinoSliverRefreshControl(
+              onRefresh: () async {
+                await _fetchOrders(); // Manually refresh the orders
+              },
             ),
-          ),
-        ],
+            SliverList(
+              delegate: SliverChildBuilderDelegate(
+                    (context, index) => _buildOrderItem(context, _orders[index]),
+                childCount: _orders.length,
+              ),
+            ),
+            SliverToBoxAdapter(
+              child: SizedBox(height: 48), // More space at the bottom
+            ),
+          ],
+        ),
       ),
     );
   }

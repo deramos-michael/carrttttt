@@ -18,7 +18,7 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
   bool _isLoading = true;
   double _orderTotal = 0.0;
 
-  // Match the product images mapping from ProductsScreen
+  // Product images mapping
   final Map<int, String> _productImages = {
     2: 'images/macbook.jpg',
     3: 'images/airpods.jpg',
@@ -43,8 +43,11 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
 
     try {
       final response = await http.get(
-        Uri.parse('http://192.168.1.107/api.php/order_details?id=${widget.orderId}'),
+        Uri.parse('https://warehousemanagementsystem.shop/api.php/order_details?id=${widget.orderId}'),
       );
+
+      print('Response Code: ${response.statusCode}');
+      print('Response Body: ${response.body}');
 
       if (response.statusCode == 200) {
         final data = json.decode(response.body);
@@ -54,9 +57,10 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
           _isLoading = false;
         });
       } else {
-        throw Exception('Failed to load order details');
+        throw Exception('Failed to load order details. Status: ${response.statusCode}');
       }
     } catch (e) {
+      print("Error: $e");
       setState(() {
         _isLoading = false;
       });
