@@ -1,5 +1,6 @@
 import 'package:flutter/cupertino.dart';
 import '../../models/cart.dart';
+
 import 'checkout_screen.dart';
 
 class CartScreen extends StatefulWidget {
@@ -12,17 +13,6 @@ class CartScreen extends StatefulWidget {
 }
 
 class _CartScreenState extends State<CartScreen> {
-  final Map<int, String> _productImages = {
-    2: 'images/Macbookair.jpg',
-    3: 'images/airpods.jpg',
-    4: 'images/AppleWatch.jpg',
-    5: 'images/iPadAir.jpg',
-    6: 'images/keyboard.jpg',
-    7: 'images/PencilApple.jpg',
-    8: 'images/Homepod.jpg',
-    10: 'images/iPhone16.jpg',
-  };
-
   @override
   Widget build(BuildContext context) {
     return CupertinoPageScaffold(
@@ -57,8 +47,7 @@ class _CartScreenState extends State<CartScreen> {
                 },
               ),
             ),
-            if (widget.cart.items.isNotEmpty)
-              _buildTotalSection(),
+            if (widget.cart.items.isNotEmpty) _buildTotalSection(),
           ],
         ),
       ),
@@ -66,7 +55,6 @@ class _CartScreenState extends State<CartScreen> {
   }
 
   Widget _buildCartItem(CartItem item) {
-    final imagePath = _productImages[item.product.id];
     return Dismissible(
       key: Key(item.product.id.toString()),
       direction: DismissDirection.endToStart,
@@ -99,14 +87,14 @@ class _CartScreenState extends State<CartScreen> {
               margin: const EdgeInsets.only(right: 12),
               child: ClipRRect(
                 borderRadius: BorderRadius.circular(8),
-                child: imagePath != null
-                    ? Image.asset(
-                  imagePath,
+                child: item.product.imageUrl != null && item.product.imageUrl!.isNotEmpty
+                    ? Image.network(
+                  item.product.imageUrl!,
                   fit: BoxFit.cover,
                   errorBuilder: (context, error, stackTrace) =>
-                  const Icon(CupertinoIcons.photo, size: 30),
+                      _buildPlaceholderImage(),
                 )
-                    : const Icon(CupertinoIcons.photo, size: 30),
+                    : _buildPlaceholderImage(),
               ),
             ),
             Expanded(
@@ -119,6 +107,14 @@ class _CartScreenState extends State<CartScreen> {
                   ),
                   const SizedBox(height: 4),
                   Text('₱${item.product.price.toStringAsFixed(2)}'),
+                  if (item.quantity > item.product.stock)
+                    Text(
+                      'Only ${item.product.stock} available',
+                      style: TextStyle(
+                        color: CupertinoColors.systemRed,
+                        fontSize: 12,
+                      ),
+                    ),
                 ],
               ),
             ),
@@ -131,7 +127,8 @@ class _CartScreenState extends State<CartScreen> {
                   onPressed: () {
                     if (item.quantity > 1) {
                       setState(() {
-                        widget.cart.updateQuantity(item.product.id, item.quantity - 1);
+                        widget.cart.updateQuantity(
+                            item.product.id, item.quantity - 1);
                       });
                     }
                   },
@@ -147,7 +144,8 @@ class _CartScreenState extends State<CartScreen> {
                   onPressed: () {
                     if (item.quantity < item.product.stock) {
                       setState(() {
-                        widget.cart.updateQuantity(item.product.id, item.quantity + 1);
+                        widget.cart.updateQuantity(
+                            item.product.id, item.quantity + 1);
                       });
                     }
                   },
@@ -160,13 +158,23 @@ class _CartScreenState extends State<CartScreen> {
     );
   }
 
+  Widget _buildPlaceholderImage() {
+    return Container(
+      color: CupertinoColors.systemGrey6,
+      child: const Center(
+        child: Icon(CupertinoIcons.photo, size: 30, color: CupertinoColors.systemGrey),
+      ),
+    );
+  }
+
   Widget _buildTotalSection() {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: CupertinoColors.extraLightBackgroundGray,
         border: Border(
-          top: BorderSide(color: CupertinoColors.lightBackgroundGray, width: 0.5),
+          top: BorderSide(
+              color: CupertinoColors.lightBackgroundGray, width: 0.5),
         ),
       ),
       child: Column(

@@ -17,17 +17,6 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
   bool _isLoading = true;
   double _orderTotal = 0.0;
 
-  final Map<int, String> _productImages = {
-    2: 'images/Macbookair.jpg',
-    3: 'images/airpods.jpg',
-    4: 'images/AppleWatch.jpg',
-    5: 'images/iPadAir.jpg',
-    6: 'images/keyboard.jpg',
-    7: 'images/PencilApple.jpg',
-    8: 'images/Homepod.jpg',
-    10: 'images/iPhone16.jpg',
-  };
-
   @override
   void initState() {
     super.initState();
@@ -44,7 +33,6 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
 
       if (response.statusCode == 200) {
         final data = json.decode(response.body);
-        // print("API Response: $data");
 
         setState(() {
           _orderItems = (data['items'] as List?)?.map((item) {
@@ -62,7 +50,6 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
         throw Exception('Failed to load order details. Status: ${response.statusCode}');
       }
     } catch (e) {
-      // print("Error: $e");
       setState(() => _isLoading = false);
       _showErrorDialog(e.toString());
     }
@@ -86,7 +73,6 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
 
   Widget _buildOrderItem(Map<String, dynamic> item) {
     final product = item['product'] as Product;
-    final imagePath = _productImages[product.id];
     final quantity = item['quantity'] as int;
     final price = item['price'] as double;
 
@@ -94,7 +80,10 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
       padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
       decoration: BoxDecoration(
         border: Border(
-          bottom: BorderSide(color: CupertinoColors.lightBackgroundGray, width: 0.5),
+          bottom: BorderSide(
+            color: CupertinoColors.lightBackgroundGray,
+            width: 0.5,
+          ),
         ),
       ),
       child: Row(
@@ -103,12 +92,26 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
             width: 60,
             height: 60,
             margin: const EdgeInsets.only(right: 12),
-            child: ClipRRect(
+            decoration: BoxDecoration(
               borderRadius: BorderRadius.circular(8),
-              child: imagePath != null
-                  ? Image.asset(imagePath, fit: BoxFit.cover, errorBuilder: (context, error, stackTrace) => const Icon(CupertinoIcons.photo, size: 30))
-                  : const Icon(CupertinoIcons.photo, size: 30),
+              color: CupertinoColors.systemGrey6,
             ),
+            child: product.imageUrl != null && product.imageUrl!.isNotEmpty
+                ? ClipRRect(
+              borderRadius: BorderRadius.circular(8),
+              child: Image.network(
+                product.imageUrl!,
+                fit: BoxFit.cover,
+                loadingBuilder: (context, child, loadingProgress) {
+                  if (loadingProgress == null) return child;
+                  return Center(
+                    child: CupertinoActivityIndicator(),
+                  );
+                },
+                errorBuilder: (context, error, stackTrace) => _buildPlaceholderImage(),
+              ),
+            )
+                : _buildPlaceholderImage(),
           ),
           Expanded(
             child: Column(
@@ -119,15 +122,25 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
                   style: const TextStyle(fontWeight: FontWeight.bold),
                 ),
                 const SizedBox(height: 4),
-                Text('$quantity × \$${price.toStringAsFixed(2)}'),
+                Text('$quantity × ₱${price.toStringAsFixed(2)}'),
               ],
             ),
           ),
           Text(
-            '\₱${(quantity * price).toStringAsFixed(2)}',
+            '₱${(quantity * price).toStringAsFixed(2)}',
             style: const TextStyle(fontWeight: FontWeight.bold),
           ),
         ],
+      ),
+    );
+  }
+
+  Widget _buildPlaceholderImage() {
+    return Center(
+      child: Icon(
+        CupertinoIcons.photo,
+        size: 30,
+        color: CupertinoColors.systemGrey,
       ),
     );
   }
@@ -144,27 +157,50 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
             ? const Center(child: CupertinoActivityIndicator())
             : CustomScrollView(
           slivers: [
-            CupertinoSliverRefreshControl(onRefresh: _fetchOrderDetails),
-            SliverList(
-              delegate: SliverChildListDelegate([
-                ..._orderItems.map(_buildOrderItem).toList(),
-                Padding(
-                  padding: const EdgeInsets.all(16),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      const Text(
-                        'Order Total:',
-                        style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
-                      ),
-                      Text(
-                        '\₱${_orderTotal.toStringAsFixed(2)}',
-                        style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
-                      ),
-                    ],
+            CupertinoSliverRefreshControl(
+              onRefresh: _fetchOrderDetails,
+            ),
+            if (_orderItems.isEmpty)
+              SliverFillRemaining(
+                child: Center(
+                  child: Text(
+                    'No items in this order',
+                    style: TextStyle(
+                      color: CupertinoColors.secondaryLabel,
+                    ),
                   ),
                 ),
-              ]),
+              )
+            else
+              SliverList(
+                delegate: SliverChildBuilderDelegate(
+                      (context, index) => _buildOrderItem(_orderItems[index]),
+                  childCount: _orderItems.length,
+                ),
+              ),
+            SliverToBoxAdapter(
+              child: Padding(
+                padding: const EdgeInsets.all(16),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    const Text(
+                      'Order Total:',
+                      style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 18,
+                      ),
+                    ),
+                    Text(
+                      '₱${_orderTotal.toStringAsFixed(2)}',
+                      style: const TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 18,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
             ),
           ],
         ),

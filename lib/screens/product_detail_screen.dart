@@ -1,4 +1,4 @@
-import 'dart:async'; // Import Timer
+import 'dart:async';
 import 'package:flutter/cupertino.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
@@ -23,17 +23,6 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
   late Product product;
   late Timer _timer;
 
-  // Match the product images mapping from ProductsScreen
-  final Map<int, String> _productImages = {
-    2: 'images/Macbookair.jpg',
-    3: 'images/airpods.jpg',
-    4: 'images/AppleWatch.jpg',
-    5: 'images/iPadAir.jpg',
-    6: 'images/keyboard.jpg',
-    7: 'images/PencilApple.jpg',
-    8: 'images/Homepod.jpg',
-    10: 'images/iPhone16.jpg',
-  };
 
   @override
   void initState() {
@@ -66,55 +55,33 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
         setState(() {
           product = Product.fromJson(data);
         });
-
-        // Show an alert when stock changes (optional)
-        _showStockStatusAlert();
       } else {
         throw Exception('Failed to load product details.');
       }
     } catch (e) {
-      // print("Error: $e");
+      // You might want to show an error dialog here
+      // _showErrorDialog(e.toString());
     }
   }
-
-  // Function to determine and show alerts for stock status
-  void _showStockStatusAlert() {
-    String stockStatus = '';
-    if (product.stock == 0) {
-      stockStatus = "Out of Stock";
-    } else if (product.stock <= 20) {
-      stockStatus = "Low Stock";
-    } else if (product.stock >= 100) {
-      stockStatus = "High Stock";
-    } else {
-      stockStatus = "In Stock";
-    }
-
-    // Show an alert based on stock status
-    CupertinoAlertDialog alertDialog = CupertinoAlertDialog(
-      title: Text('Stock Status'),
-      content: Text('The product is currently: $stockStatus'),
-      actions: [
-        CupertinoDialogAction(
-          child: Text('OK'),
-          onPressed: () {
-            Navigator.of(context).pop();
-          },
-        ),
-      ],
-    );
-
-    // Show the alert only if stock status changes
-    showCupertinoDialog(
-      context: context,
-      builder: (context) => alertDialog,
-    );
-  }
+  //
+  // void _showErrorDialog(String message) {
+  //   showCupertinoDialog(
+  //     context: context,
+  //     builder: (context) => CupertinoAlertDialog(
+  //       title: const Text('Error'),
+  //       content: Text(message),
+  //       actions: [
+  //         CupertinoDialogAction(
+  //           child: const Text('OK'),
+  //           onPressed: () => Navigator.pop(context),
+  //         ),
+  //       ],
+  //     ),
+  //   );
+  // }
 
   @override
   Widget build(BuildContext context) {
-    final imagePath = _productImages[product.id];
-
     return CupertinoPageScaffold(
       navigationBar: CupertinoNavigationBar(
         middle: Text(product.name),
@@ -127,16 +94,16 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
             children: [
               AspectRatio(
                 aspectRatio: 1,
-                child: imagePath != null
-                    ? Image.asset(
-                  imagePath,
+                child: product.imageUrl != null && product.imageUrl!.isNotEmpty
+                    ? Image.network(
+                  product.imageUrl!,
                   fit: BoxFit.cover,
                   width: double.infinity,
                   height: double.infinity,
                   errorBuilder: (context, error, stackTrace) =>
-                  const Icon(CupertinoIcons.photo, size: 100),
+                      _buildPlaceholderImage(),
                 )
-                    : const Icon(CupertinoIcons.photo, size: 100),
+                    : _buildPlaceholderImage(),
               ),
               Padding(
                 padding: const EdgeInsets.all(16),
@@ -160,7 +127,7 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                       ),
                     ),
                     const SizedBox(height: 16),
-                    // Stock section without loading spinner
+                    // Stock status indicator
                     Row(
                       children: [
                         Icon(
@@ -183,14 +150,19 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                     SizedBox(
                       width: double.infinity,
                       child: CupertinoButton(
-                        color: CupertinoTheme.of(context).primaryColor,
-                        child: const Text('Add to Cart',
-                          style: TextStyle(color: CupertinoColors.white),
+                        color: product.stock > 0
+                            ? CupertinoTheme.of(context).primaryColor
+                            : CupertinoColors.systemGrey,
+                        child: Text(
+                          product.stock > 0 ? 'Add to Cart' : 'Out of Stock',
+                          style: const TextStyle(color: CupertinoColors.white),
                         ),
-                        onPressed: () {
+                        onPressed: product.stock > 0
+                            ? () {
                           widget.cart.addItem(product);
                           Navigator.of(context).pop(true); // Returning true to refresh
-                        },
+                        }
+                            : null,
                       ),
                     ),
                   ],
@@ -199,6 +171,15 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
             ],
           ),
         ),
+      ),
+    );
+  }
+
+  Widget _buildPlaceholderImage() {
+    return Container(
+      color: CupertinoColors.systemGrey6,
+      child: const Center(
+        child: Icon(CupertinoIcons.photo, size: 60, color: CupertinoColors.systemGrey),
       ),
     );
   }

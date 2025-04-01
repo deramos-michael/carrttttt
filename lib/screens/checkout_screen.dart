@@ -1,8 +1,8 @@
 import 'package:flutter/cupertino.dart';
-import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 import '../../models/cart.dart';
+
 
 class CheckoutScreen extends StatefulWidget {
   final Cart cart;
@@ -15,18 +15,6 @@ class CheckoutScreen extends StatefulWidget {
 
 class _CheckoutScreenState extends State<CheckoutScreen> {
   bool _isProcessing = false;
-
-  // Match the product images mapping from ProductsScreen
-  final Map<int, String> _productImages = {
-    2: 'images/Macbookair.jpg',
-    3: 'images/airpods.jpg',
-    4: 'images/AppleWatch.jpg',
-    5: 'images/iPadAir.jpg',
-    6: 'images/keyboard.jpg',
-    7: 'images/PencilApple.jpg',
-    8: 'images/Homepod.jpg',
-    10: 'images/iPhone16.jpg',
-  };
 
   Future<void> _confirmOrder() async {
     setState(() {
@@ -53,7 +41,6 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
         final responseData = json.decode(response.body);
         if (responseData['success']) {
           widget.cart.clear();
-          // Show success popup
           _showOrderConfirmationPopup(responseData['purchase_id']);
         } else {
           throw Exception(responseData['error'] ?? 'Unknown error');
@@ -75,7 +62,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
       context: context,
       builder: (context) => CupertinoAlertDialog(
         title: const Text('Order Placed'),
-        content: Text('Your order has been successfully placed.'),
+        content: Text('Your order #$orderId has been successfully placed.'),
         actions: [
           CupertinoDialogAction(
             child: const Text('OK'),
@@ -106,8 +93,6 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
   }
 
   Widget _buildCartItem(CartItem item) {
-    final imagePath = _productImages[item.product.id];
-
     return Container(
       padding: const EdgeInsets.symmetric(vertical: 8),
       child: Row(
@@ -118,14 +103,14 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
             margin: const EdgeInsets.only(right: 12),
             child: ClipRRect(
               borderRadius: BorderRadius.circular(8),
-              child: imagePath != null
-                  ? Image.asset(
-                imagePath,
+              child: item.product.imageUrl != null && item.product.imageUrl!.isNotEmpty
+                  ? Image.network(
+                item.product.imageUrl!,
                 fit: BoxFit.cover,
                 errorBuilder: (context, error, stackTrace) =>
-                const Icon(CupertinoIcons.photo, size: 30),
+                    _buildPlaceholderImage(),
               )
-                  : const Icon(CupertinoIcons.photo, size: 30),
+                  : _buildPlaceholderImage(),
             ),
           ),
           Expanded(
@@ -139,6 +124,14 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                   ),
                 ),
                 Text('${item.quantity} × ₱${item.product.price.toStringAsFixed(2)}'),
+                if (item.quantity > item.product.stock)
+                  Text(
+                    'Only ${item.product.stock} available',
+                    style: TextStyle(
+                      color: CupertinoColors.systemRed,
+                      fontSize: 12,
+                    ),
+                  ),
               ],
             ),
           ),
@@ -149,6 +142,15 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
             ),
           ),
         ],
+      ),
+    );
+  }
+
+  Widget _buildPlaceholderImage() {
+    return Container(
+      color: CupertinoColors.systemGrey6,
+      child: const Center(
+        child: Icon(CupertinoIcons.photo, size: 30, color: CupertinoColors.systemGrey),
       ),
     );
   }
@@ -167,45 +169,60 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              Card(
-                child: Padding(
-                  padding: const EdgeInsets.all(16),
-                  child: Column(
-                    children: [
-                      ...widget.cart.items.map(_buildCartItem),
-                      const Divider(),
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          const Text(
-                            'Total:',
-                            style: TextStyle(
-                              fontWeight: FontWeight.bold,
-                              fontSize: 16,
-                            ),
+              // Replacing Material Card with a styled Container
+              Container(
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: CupertinoColors.systemBackground.resolveFrom(context),
+                  borderRadius: BorderRadius.circular(12),
+                  boxShadow: [
+                    BoxShadow(
+                      color: CupertinoColors.systemGrey.withOpacity(0.2),
+                      blurRadius: 6,
+                      spreadRadius: 2,
+                    )
+                  ],
+                ),
+                child: Column(
+                  children: [
+                    ...widget.cart.items.map(_buildCartItem),
+                    const SizedBox(height: 12),
+                    Container( // Replacing Divider
+                      height: 1,
+                      color: CupertinoColors.systemGrey4,
+                    ),
+                    const SizedBox(height: 12),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        const Text(
+                          'Total:',
+                          style: TextStyle(
+                            fontWeight: FontWeight.bold,
+                            fontSize: 16,
                           ),
-                          Text(
-                            '₱${totalAmount.toStringAsFixed(2)}',
-                            style: const TextStyle(
-                              fontWeight: FontWeight.bold,
-                              fontSize: 16,
-                            ),
+                        ),
+                        Text(
+                          '₱${totalAmount.toStringAsFixed(2)}',
+                          style: const TextStyle(
+                            fontWeight: FontWeight.bold,
+                            fontSize: 16,
                           ),
-                        ],
-                      ),
-                    ],
-                  ),
+                        ),
+                      ],
+                    ),
+                  ],
                 ),
               ),
               const SizedBox(height: 16),
               CupertinoButton(
                 color: CupertinoTheme.of(context).primaryColor,
-                onPressed: _isProcessing ? null : _confirmOrder,
+                onPressed: _isProcessing || _hasInsufficientStock() ? null : _confirmOrder,
                 child: _isProcessing
                     ? const CupertinoActivityIndicator()
-                    : const Text(
-                  'Confirm Order',
-                  style: TextStyle(color: CupertinoColors.white),
+                    : Text(
+                  _hasInsufficientStock() ? 'Insufficient Stock' : 'Confirm Order',
+                  style: const TextStyle(color: CupertinoColors.white),
                 ),
               ),
             ],
@@ -213,5 +230,9 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
         ),
       ),
     );
+  }
+
+  bool _hasInsufficientStock() {
+    return widget.cart.items.any((item) => item.quantity > item.product.stock);
   }
 }
