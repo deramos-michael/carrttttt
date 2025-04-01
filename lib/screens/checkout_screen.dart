@@ -39,8 +39,8 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
         headers: {'Content-Type': 'application/json'},
         body: json.encode({
           'total': widget.cart.totalAmount,
-          'amount_paid': widget.cart.totalAmount, // Paying exact amount
-          'sukli': 0, // No change since paying exact amount
+          'amount_paid': widget.cart.totalAmount,
+          'sukli': 0,
           'items': widget.cart.items.map((item) => {
             'product_id': item.product.id,
             'quantity': item.quantity,
@@ -53,9 +53,8 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
         final responseData = json.decode(response.body);
         if (responseData['success']) {
           widget.cart.clear();
-          // ignore: use_build_context_synchronously
-          Navigator.of(context).popUntil((route) => route.isFirst);
-          _showSuccessDialog(responseData['purchase_id']);
+          // Show success popup
+          _showOrderConfirmationPopup(responseData['purchase_id']);
         } else {
           throw Exception(responseData['error'] ?? 'Unknown error');
         }
@@ -71,16 +70,19 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
     }
   }
 
-  void _showSuccessDialog(int orderId) {
+  void _showOrderConfirmationPopup(int orderId) {
     showCupertinoDialog(
       context: context,
       builder: (context) => CupertinoAlertDialog(
-        title: const Text('Order Confirmed'),
-        content: Text('Your order #$orderId has been placed successfully.'),
+        title: const Text('Order Placed'),
+        content: Text('Your order has been successfully placed.'),
         actions: [
           CupertinoDialogAction(
             child: const Text('OK'),
-            onPressed: () => Navigator.of(context).pop(),
+            onPressed: () {
+              Navigator.of(context).pop(); // Close the dialog
+              Navigator.of(context).popUntil((route) => route.isFirst); // Go back to home
+            },
           ),
         ],
       ),
@@ -110,7 +112,6 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
       padding: const EdgeInsets.symmetric(vertical: 8),
       child: Row(
         children: [
-          // Product image
           Container(
             width: 60,
             height: 60,
@@ -166,7 +167,6 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              // Cart items list
               Card(
                 child: Padding(
                   padding: const EdgeInsets.all(16),
@@ -198,8 +198,6 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                 ),
               ),
               const SizedBox(height: 16),
-
-              // Confirm order button
               CupertinoButton(
                 color: CupertinoTheme.of(context).primaryColor,
                 onPressed: _isProcessing ? null : _confirmOrder,
