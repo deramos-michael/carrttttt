@@ -119,7 +119,7 @@ class _CartScreenState extends State<CartScreen> {
                     style: const TextStyle(fontWeight: FontWeight.bold),
                   ),
                   const SizedBox(height: 4),
-                  Text('\$${item.product.price.toStringAsFixed(2)}'),
+                  Text('\₱${item.product.price.toStringAsFixed(2)}'),
                 ],
               ),
             ),
@@ -180,7 +180,7 @@ class _CartScreenState extends State<CartScreen> {
                 style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
               ),
               Text(
-                '\$${widget.cart.totalAmount.toStringAsFixed(2)}',
+                '\₱${widget.cart.totalAmount.toStringAsFixed(2)}',
                 style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
               ),
             ],

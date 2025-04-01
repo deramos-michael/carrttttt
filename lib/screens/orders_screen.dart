@@ -137,7 +137,7 @@ class _OrdersScreenState extends State<OrdersScreen> {
                     ),
                     const SizedBox(height: 4),
                     Text(
-                      'Total: \$${double.tryParse(order['total'].toString())?.toStringAsFixed(2) ?? '0.00'}',
+                      'Total: \₱${double.tryParse(order['total'].toString())?.toStringAsFixed(2) ?? '0.00'}',
                       style: TextStyle(
                         color: CupertinoColors.secondaryLabel,
                       ),

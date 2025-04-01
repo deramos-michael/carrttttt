@@ -123,7 +123,7 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                     ),
                     const SizedBox(height: 8),
                     Text(
-                      '\$${product.price.toStringAsFixed(2)}',
+                      '\₱${product.price.toStringAsFixed(2)}',
                       style: TextStyle(
                         fontSize: 20,
                         color: CupertinoTheme.of(context).primaryColor,

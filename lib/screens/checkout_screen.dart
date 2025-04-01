@@ -165,12 +165,12 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                     fontWeight: FontWeight.bold,
                   ),
                 ),
-                Text('${item.quantity} × \$${item.product.price.toStringAsFixed(2)}'),
+                Text('${item.quantity} × \₱${item.product.price.toStringAsFixed(2)}'),
               ],
             ),
           ),
           Text(
-            '\$${(item.quantity * item.product.price).toStringAsFixed(2)}',
+            '\₱${(item.quantity * item.product.price).toStringAsFixed(2)}',
             style: const TextStyle(
               fontWeight: FontWeight.bold,
             ),
@@ -213,7 +213,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                             ),
                           ),
                           Text(
-                            '\$${totalAmount.toStringAsFixed(2)}',
+                            '\₱${totalAmount.toStringAsFixed(2)}',
                             style: const TextStyle(
                               fontWeight: FontWeight.bold,
                               fontSize: 16,
@@ -239,7 +239,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                         keyboardType: TextInputType.number,
                         prefix: const Padding(
                           padding: EdgeInsets.only(left: 8),
-                          child: Text('\$'),
+                          child: Text('\₱'),
                         ),
                         decoration: BoxDecoration(
                           border: Border.all(
@@ -256,7 +256,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                           children: [
                             const Text('Change:'),
                             Text(
-                              '\$${((double.tryParse(_amountController.text) ?? 0.0) - totalAmount).toStringAsFixed(2)}',
+                              '\₱${((double.tryParse(_amountController.text) ?? 0.0) - totalAmount).toStringAsFixed(2)}',
                               style: const TextStyle(
                                 fontWeight: FontWeight.bold,
                               ),
