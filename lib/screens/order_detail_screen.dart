@@ -1,5 +1,4 @@
 import 'package:flutter/cupertino.dart';
-import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 import '../../models/product.dart';
@@ -7,7 +6,7 @@ import '../../models/product.dart';
 class OrderDetailScreen extends StatefulWidget {
   final int orderId;
 
-  const OrderDetailScreen({Key? key, required this.orderId}) : super(key: key);
+  const OrderDetailScreen({super.key, required this.orderId});
 
   @override
   _OrderDetailScreenState createState() => _OrderDetailScreenState();
@@ -45,7 +44,7 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
 
       if (response.statusCode == 200) {
         final data = json.decode(response.body);
-        print("API Response: $data");
+        // print("API Response: $data");
 
         setState(() {
           _orderItems = (data['items'] as List?)?.map((item) {
@@ -63,7 +62,7 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
         throw Exception('Failed to load order details. Status: ${response.statusCode}');
       }
     } catch (e) {
-      print("Error: $e");
+      // print("Error: $e");
       setState(() => _isLoading = false);
       _showErrorDialog(e.toString());
     }
@@ -125,7 +124,7 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
             ),
           ),
           Text(
-            '\$${(quantity * price).toStringAsFixed(2)}',
+            '\₱${(quantity * price).toStringAsFixed(2)}',
             style: const TextStyle(fontWeight: FontWeight.bold),
           ),
         ],
@@ -159,7 +158,7 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
                         style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
                       ),
                       Text(
-                        '\$${_orderTotal.toStringAsFixed(2)}',
+                        '\₱${_orderTotal.toStringAsFixed(2)}',
                         style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
                       ),
                     ],

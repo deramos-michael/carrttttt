@@ -6,7 +6,7 @@ import 'dart:convert';
 import 'order_detail_screen.dart';
 
 class OrdersScreen extends StatefulWidget {
-  const OrdersScreen({Key? key}) : super(key: key);
+  const OrdersScreen({super.key});
 
   @override
   _OrdersScreenState createState() => _OrdersScreenState();
@@ -45,7 +45,7 @@ class _OrdersScreenState extends State<OrdersScreen> {
         throw Exception('Failed to load orders');
       }
     } catch (e) {
-      print("Error: $e");
+      // print("Error: $e");
       setState(() {
         _isLoading = false; // Set loading to false if there's an error
       });
@@ -137,7 +137,7 @@ class _OrdersScreenState extends State<OrdersScreen> {
                     ),
                     const SizedBox(height: 4),
                     Text(
-                      'Total: \₱${double.tryParse(order['total'].toString())?.toStringAsFixed(2) ?? '0.00'}',
+                      'Total: ₱${double.tryParse(order['total'].toString())?.toStringAsFixed(2) ?? '0.00'}',
                       style: TextStyle(
                         color: CupertinoColors.secondaryLabel,
                       ),

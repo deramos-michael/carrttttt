@@ -10,7 +10,7 @@ import 'product_detail_screen.dart';
 class ProductsScreen extends StatefulWidget {
   final Cart cart;
 
-  const ProductsScreen({Key? key, required this.cart}) : super(key: key);
+  const ProductsScreen({super.key, required this.cart});
 
   @override
   _ProductsScreenState createState() => _ProductsScreenState();
@@ -72,7 +72,7 @@ class _ProductsScreenState extends State<ProductsScreen> {
         throw Exception('Failed to load products. Status: ${response.statusCode}');
       }
     } catch (e) {
-      print("Error: $e");
+      // print("Error: $e");
       setState(() {
         _isLoading = false; // Set loading to false if there's an error
       });
@@ -106,7 +106,7 @@ class _ProductsScreenState extends State<ProductsScreen> {
             padding: EdgeInsets.zero,
             onPressed: () {
               // Action for the plus icon, for example, navigate to another page or open a dialog
-              print("Plus icon clicked");
+              // print("Plus icon clicked");
             },
             child: const Icon(CupertinoIcons.add),
           ),
@@ -249,7 +249,7 @@ class _ProductsScreenState extends State<ProductsScreen> {
                   ),
                   const SizedBox(height: 8),
                   Text(
-                    '\₱${product.price.toStringAsFixed(2)}',
+                    '₱${product.price.toStringAsFixed(2)}',
                     style: TextStyle(
                       color: CupertinoTheme.of(context).primaryColor,
                       fontWeight: FontWeight.bold,

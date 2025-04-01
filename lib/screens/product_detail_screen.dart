@@ -1,6 +1,5 @@
 import 'dart:async'; // Import Timer
 import 'package:flutter/cupertino.dart';
-import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 import '../models/product.dart';
@@ -10,11 +9,11 @@ class ProductDetailScreen extends StatefulWidget {
   final Product product;
   final Cart cart;
 
-  ProductDetailScreen({
-    Key? key,
+  const ProductDetailScreen({
+    super.key,
     required this.product,
     required this.cart,
-  }) : super(key: key);
+  });
 
   @override
   _ProductDetailScreenState createState() => _ProductDetailScreenState();
@@ -74,7 +73,7 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
         throw Exception('Failed to load product details.');
       }
     } catch (e) {
-      print("Error: $e");
+      // print("Error: $e");
     }
   }
 
@@ -153,7 +152,7 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                     ),
                     const SizedBox(height: 8),
                     Text(
-                      '\₱${product.price.toStringAsFixed(2)}',
+                      '₱${product.price.toStringAsFixed(2)}',
                       style: TextStyle(
                         fontSize: 20,
                         color: CupertinoTheme.of(context).primaryColor,

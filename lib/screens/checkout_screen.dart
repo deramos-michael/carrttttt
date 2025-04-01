@@ -7,7 +7,7 @@ import '../../models/cart.dart';
 class CheckoutScreen extends StatefulWidget {
   final Cart cart;
 
-  const CheckoutScreen({Key? key, required this.cart}) : super(key: key);
+  const CheckoutScreen({super.key, required this.cart});
 
   @override
   _CheckoutScreenState createState() => _CheckoutScreenState();
@@ -74,12 +74,13 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
           }).toList(),
         }),
       );
-      print('Response: ${response.body}'); // Debug response
+      // print('Response: ${response.body}'); // Debug response
 
       if (response.statusCode == 200) {
         final responseData = json.decode(response.body);
         if (responseData['success']) {
           widget.cart.clear();
+          // ignore: use_build_context_synchronously
           Navigator.of(context).popUntil((route) => route.isFirst);
           _showSuccessDialog(responseData['purchase_id']);
         } else {
@@ -89,7 +90,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
         throw Exception('Failed to process order');
       }
     } catch (e) {
-      print("Error: $e"); // Log error
+      // print("Error: $e"); // Log error
       _showErrorDialog(e.toString());
     }
     finally {
@@ -165,12 +166,12 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                     fontWeight: FontWeight.bold,
                   ),
                 ),
-                Text('${item.quantity} × \₱${item.product.price.toStringAsFixed(2)}'),
+                Text('${item.quantity} × ₱${item.product.price.toStringAsFixed(2)}'),
               ],
             ),
           ),
           Text(
-            '\₱${(item.quantity * item.product.price).toStringAsFixed(2)}',
+            '₱${(item.quantity * item.product.price).toStringAsFixed(2)}',
             style: const TextStyle(
               fontWeight: FontWeight.bold,
             ),
@@ -200,7 +201,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                   padding: const EdgeInsets.all(16),
                   child: Column(
                     children: [
-                      ...widget.cart.items.map(_buildCartItem).toList(),
+                      ...widget.cart.items.map(_buildCartItem),
                       const Divider(),
                       Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -213,7 +214,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                             ),
                           ),
                           Text(
-                            '\₱${totalAmount.toStringAsFixed(2)}',
+                            '₱${totalAmount.toStringAsFixed(2)}',
                             style: const TextStyle(
                               fontWeight: FontWeight.bold,
                               fontSize: 16,
@@ -239,7 +240,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                         keyboardType: TextInputType.number,
                         prefix: const Padding(
                           padding: EdgeInsets.only(left: 8),
-                          child: Text('\₱'),
+                          child: Text('₱'),
                         ),
                         decoration: BoxDecoration(
                           border: Border.all(
@@ -256,7 +257,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                           children: [
                             const Text('Change:'),
                             Text(
-                              '\₱${((double.tryParse(_amountController.text) ?? 0.0) - totalAmount).toStringAsFixed(2)}',
+                              '₱${((double.tryParse(_amountController.text) ?? 0.0) - totalAmount).toStringAsFixed(2)}',
                               style: const TextStyle(
                                 fontWeight: FontWeight.bold,
                               ),
@@ -273,12 +274,12 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
               // Complete order button
               CupertinoButton(
                 color: CupertinoTheme.of(context).primaryColor,
+
+                onPressed: _isProcessing ? null : _processOrder,
                 child: _isProcessing
                     ? const CupertinoActivityIndicator()
                     : const Text('Complete Order',
                     style: TextStyle(color: CupertinoColors.white),),
-
-                onPressed: _isProcessing ? null : _processOrder,
               ),
             ],
           ),
