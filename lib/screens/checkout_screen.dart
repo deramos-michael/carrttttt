@@ -14,7 +14,6 @@ class CheckoutScreen extends StatefulWidget {
 }
 
 class _CheckoutScreenState extends State<CheckoutScreen> {
-  final TextEditingController _amountController = TextEditingController();
   bool _isProcessing = false;
 
   // Match the product images mapping from ProductsScreen
@@ -29,32 +28,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
     10: 'images/iPhone16.jpg',
   };
 
-  @override
-  void dispose() {
-    _amountController.dispose();
-    super.dispose();
-  }
-
-  Future<void> _processOrder() async {
-    final amountPaid = double.tryParse(_amountController.text) ?? 0.0;
-
-    if (amountPaid < widget.cart.totalAmount) {
-      showCupertinoDialog(
-        context: context,
-        builder: (context) => CupertinoAlertDialog(
-          title: const Text('Insufficient Payment'),
-          content: const Text('The amount paid is less than the total amount.'),
-          actions: [
-            CupertinoDialogAction(
-              child: const Text('OK'),
-              onPressed: () => Navigator.of(context).pop(),
-            ),
-          ],
-        ),
-      );
-      return;
-    }
-
+  Future<void> _confirmOrder() async {
     setState(() {
       _isProcessing = true;
     });
@@ -65,8 +39,8 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
         headers: {'Content-Type': 'application/json'},
         body: json.encode({
           'total': widget.cart.totalAmount,
-          'amount_paid': amountPaid,
-          'sukli': amountPaid - widget.cart.totalAmount,
+          'amount_paid': widget.cart.totalAmount, // Paying exact amount
+          'sukli': 0, // No change since paying exact amount
           'items': widget.cart.items.map((item) => {
             'product_id': item.product.id,
             'quantity': item.quantity,
@@ -74,7 +48,6 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
           }).toList(),
         }),
       );
-      // print('Response: ${response.body}'); // Debug response
 
       if (response.statusCode == 200) {
         final responseData = json.decode(response.body);
@@ -90,10 +63,8 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
         throw Exception('Failed to process order');
       }
     } catch (e) {
-      // print("Error: $e"); // Log error
       _showErrorDialog(e.toString());
-    }
-    finally {
+    } finally {
       setState(() {
         _isProcessing = false;
       });
@@ -104,8 +75,8 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
     showCupertinoDialog(
       context: context,
       builder: (context) => CupertinoAlertDialog(
-        title: const Text('Order Successful'),
-        content: Text('Your order #$orderId has been placed.'),
+        title: const Text('Order Confirmed'),
+        content: Text('Your order #$orderId has been placed successfully.'),
         actions: [
           CupertinoDialogAction(
             child: const Text('OK'),
@@ -187,7 +158,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
 
     return CupertinoPageScaffold(
       navigationBar: const CupertinoNavigationBar(
-        middle: Text('Checkout'),
+        middle: Text('Confirm Order'),
       ),
       child: SafeArea(
         child: Padding(
@@ -228,58 +199,16 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
               ),
               const SizedBox(height: 16),
 
-              // Payment input
-              Card(
-                child: Padding(
-                  padding: const EdgeInsets.all(16),
-                  child: Column(
-                    children: [
-                      CupertinoTextField(
-                        controller: _amountController,
-                        placeholder: 'Enter amount paid',
-                        keyboardType: TextInputType.number,
-                        prefix: const Padding(
-                          padding: EdgeInsets.only(left: 8),
-                          child: Text('₱'),
-                        ),
-                        decoration: BoxDecoration(
-                          border: Border.all(
-                            color: CupertinoColors.lightBackgroundGray,
-                          ),
-                          borderRadius: BorderRadius.circular(8),
-                        ),
-                        onChanged: (value) => setState(() {}),
-                      ),
-                      if (_amountController.text.isNotEmpty) ...[
-                        const SizedBox(height: 8),
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            const Text('Change:'),
-                            Text(
-                              '₱${((double.tryParse(_amountController.text) ?? 0.0) - totalAmount).toStringAsFixed(2)}',
-                              style: const TextStyle(
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ],
-                    ],
-                  ),
-                ),
-              ),
-              const SizedBox(height: 16),
-
-              // Complete order button
+              // Confirm order button
               CupertinoButton(
                 color: CupertinoTheme.of(context).primaryColor,
-
-                onPressed: _isProcessing ? null : _processOrder,
+                onPressed: _isProcessing ? null : _confirmOrder,
                 child: _isProcessing
                     ? const CupertinoActivityIndicator()
-                    : const Text('Complete Order',
-                    style: TextStyle(color: CupertinoColors.white),),
+                    : const Text(
+                  'Confirm Order',
+                  style: TextStyle(color: CupertinoColors.white),
+                ),
               ),
             ],
           ),
