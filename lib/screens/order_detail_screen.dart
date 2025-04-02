@@ -31,6 +31,7 @@ class OrderDetailScreenState extends State<OrderDetailScreen> {
         Uri.parse('https://warehousemanagementsystem.shop/api.php/order_details?id=${widget.orderId}'),
       );
 
+
       if (response.statusCode == 200) {
         final data = json.decode(response.body);
 
