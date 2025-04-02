@@ -10,10 +10,10 @@ class CheckoutScreen extends StatefulWidget {
   const CheckoutScreen({super.key, required this.cart});
 
   @override
-  _CheckoutScreenState createState() => _CheckoutScreenState();
+  CheckoutScreenState createState() => CheckoutScreenState();
 }
 
-class _CheckoutScreenState extends State<CheckoutScreen> {
+class CheckoutScreenState extends State<CheckoutScreen> {
   bool _isProcessing = false;
 
   Future<void> _confirmOrder() async {

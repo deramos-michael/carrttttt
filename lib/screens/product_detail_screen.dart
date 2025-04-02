@@ -16,10 +16,10 @@ class ProductDetailScreen extends StatefulWidget {
   });
 
   @override
-  _ProductDetailScreenState createState() => _ProductDetailScreenState();
+  ProductDetailScreenState createState() => ProductDetailScreenState();
 }
 
-class _ProductDetailScreenState extends State<ProductDetailScreen> {
+class ProductDetailScreenState extends State<ProductDetailScreen> {
   late Product product;
   late Timer _timer;
 
@@ -153,16 +153,16 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                         color: product.stock > 0
                             ? CupertinoTheme.of(context).primaryColor
                             : CupertinoColors.systemGrey,
-                        child: Text(
-                          product.stock > 0 ? 'Add to Cart' : 'Out of Stock',
-                          style: const TextStyle(color: CupertinoColors.white),
-                        ),
                         onPressed: product.stock > 0
                             ? () {
                           widget.cart.addItem(product);
                           Navigator.of(context).pop(true); // Returning true to refresh
                         }
                             : null,
+                        child: Text(
+                          product.stock > 0 ? 'Add to Cart' : 'Out of Stock',
+                          style: const TextStyle(color: CupertinoColors.white),
+                        ),
                       ),
                     ),
                   ],

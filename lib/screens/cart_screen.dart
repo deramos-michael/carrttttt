@@ -9,10 +9,10 @@ class CartScreen extends StatefulWidget {
   const CartScreen({super.key, required this.cart});
 
   @override
-  _CartScreenState createState() => _CartScreenState();
+  CartScreenState createState() => CartScreenState();
 }
 
-class _CartScreenState extends State<CartScreen> {
+class CartScreenState extends State<CartScreen> {
   @override
   Widget build(BuildContext context) {
     return CupertinoPageScaffold(

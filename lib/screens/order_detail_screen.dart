@@ -9,10 +9,10 @@ class OrderDetailScreen extends StatefulWidget {
   const OrderDetailScreen({super.key, required this.orderId});
 
   @override
-  _OrderDetailScreenState createState() => _OrderDetailScreenState();
+  OrderDetailScreenState createState() => OrderDetailScreenState();
 }
 
-class _OrderDetailScreenState extends State<OrderDetailScreen> {
+class OrderDetailScreenState extends State<OrderDetailScreen> {
   List<Map<String, dynamic>> _orderItems = [];
   bool _isLoading = true;
   double _orderTotal = 0.0;

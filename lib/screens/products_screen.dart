@@ -14,10 +14,10 @@ class ProductsScreen extends StatefulWidget {
   const ProductsScreen({super.key, required this.cart});
 
   @override
-  _ProductsScreenState createState() => _ProductsScreenState();
+  ProductsScreenState createState() => ProductsScreenState();
 }
 
-class _ProductsScreenState extends State<ProductsScreen> {
+class ProductsScreenState extends State<ProductsScreen> {
   List<Product> _products = [];
   bool _isLoading = true;
   late Timer _timer;
@@ -45,6 +45,9 @@ class _ProductsScreenState extends State<ProductsScreen> {
         Uri.parse('https://warehousemanagementsystem.shop/api.php/products'),
       );
 
+      // print("Response Status: ${response.statusCode}");
+      // print("Response Body: ${response.body}");
+
       if (response.statusCode == 200) {
         setState(() {
           _products = (json.decode(response.body) as List)
@@ -56,6 +59,7 @@ class _ProductsScreenState extends State<ProductsScreen> {
         throw Exception('Failed to load products. Status: ${response.statusCode}');
       }
     } catch (e) {
+      // print("Error: $e");
       setState(() => _isLoading = false);
       _showErrorDialog(e.toString());
     }
@@ -151,61 +155,68 @@ class _ProductsScreenState extends State<ProductsScreen> {
 
     showCupertinoDialog(
       context: context,
-      builder: (context) => CupertinoAlertDialog(
-        title: const Text('Add New Product'),
-        content: SingleChildScrollView(
-          child: Column(
-            children: [
-              _buildTextField(nameController, 'Product Name'),
-              _buildTextField(priceController, 'Price', isNumber: true),
-              _buildTextField(stockController, 'Stock Quantity', isNumber: true),
-              _buildTextField(imageUrlController, 'Image URL (optional)'),
-              const SizedBox(height: 10),
-              if (imageUrlController.text.isNotEmpty)
-                SizedBox(
-                  height: 100,
-                  child: Image.network(
-                    imageUrlController.text,
-                    fit: BoxFit.cover,
-                    errorBuilder: (context, error, stackTrace) =>
-                    const Icon(CupertinoIcons.photo, size: 50),
-                  ),
+      builder: (context) {
+        return StatefulBuilder(
+          builder: (context, setState) {
+            return CupertinoAlertDialog(
+              title: const Text('Add New Product'),
+              content: Column(
+                children: [
+                  _buildTextField(nameController, 'Product Name'),
+                  _buildTextField(priceController, 'Price', isNumber: true),
+                  _buildTextField(stockController, 'Stock Quantity', isNumber: true),
+                  _buildTextField(imageUrlController, 'Image URL (optional)'),
+                  const SizedBox(height: 10),
+                  imageUrlController.text.isNotEmpty
+                      ? SizedBox(
+                    height: 100,
+                    child: Image.network(
+                      imageUrlController.text,
+                      fit: BoxFit.cover,
+                      errorBuilder: (context, error, stackTrace) =>
+                      const Icon(CupertinoIcons.photo, size: 50),
+                    ),
+                  )
+                      : const Icon(CupertinoIcons.photo, size: 50),
+                ],
+              ),
+              actions: [
+                CupertinoDialogAction(
+                  child: const Text('Cancel'),
+                  onPressed: () => Navigator.pop(context),
                 ),
-            ],
-          ),
-        ),
-        actions: [
-          CupertinoDialogAction(
-            child: const Text('Cancel'),
-            onPressed: () => Navigator.pop(context),
-          ),
-          CupertinoDialogAction(
-            child: const Text('Add'),
-            onPressed: () async {
-              if (nameController.text.isEmpty ||
-                  priceController.text.isEmpty ||
-                  stockController.text.isEmpty) {
-                _showErrorDialog('Please fill all required fields');
-                return;
-              }
+                CupertinoDialogAction(
+                  child: const Text('Add'),
+                  onPressed: () async {
+                    if (nameController.text.isEmpty ||
+                        priceController.text.isEmpty ||
+                        stockController.text.isEmpty) {
+                      _showErrorDialog('Please fill all required fields');
+                      return;
+                    }
 
-              final newProduct = {
-                'name': nameController.text,
-                'price': double.tryParse(priceController.text) ?? 0.0,
-                'stock': int.tryParse(stockController.text) ?? 0,
-                'image_url': imageUrlController.text.isNotEmpty
-                    ? imageUrlController.text
-                    : null, // Send null if no URL provided
-              };
+                    final newProduct = {
+                      'name': nameController.text,
+                      'price': double.tryParse(priceController.text) ?? 0.0,
+                      'stock': int.tryParse(stockController.text) ?? 0,
+                      'image_path': imageUrlController.text.isNotEmpty
+                          ? imageUrlController.text
+                          : null,
+                    };
 
-              await _addProduct(newProduct);
-              Navigator.pop(context);
-            },
-          ),
-        ],
-      ),
+                    await _addProduct(newProduct);
+                    // ignore: use_build_context_synchronously
+                    Navigator.pop(context);
+                  },
+                ),
+              ],
+            );
+          },
+        );
+      },
     );
   }
+
 
   void _showEditProductDialog(Product product) {
     final nameController = TextEditingController(text: product.name);
@@ -215,61 +226,83 @@ class _ProductsScreenState extends State<ProductsScreen> {
 
     showCupertinoDialog(
       context: context,
-      builder: (context) => CupertinoAlertDialog(
-        title: const Text('Edit Product'),
-        content: SingleChildScrollView(
-          child: Column(
-            children: [
-              _buildTextField(nameController, 'Product Name'),
-              _buildTextField(priceController, 'Price', isNumber: true),
-              _buildTextField(stockController, 'Stock Quantity', isNumber: true),
-              _buildTextField(imageUrlController, 'Image URL (optional)'),
-              const SizedBox(height: 10),
-              if (imageUrlController.text.isNotEmpty)
-                SizedBox(
-                  height: 100,
-                  child: Image.network(
-                    imageUrlController.text,
-                    fit: BoxFit.cover,
-                    errorBuilder: (context, error, stackTrace) =>
-                    const Icon(CupertinoIcons.photo, size: 50),
+      builder: (context) {
+        return StatefulBuilder(
+          builder: (context, setState) {
+            return CupertinoAlertDialog(
+              title: const Text('Edit Product'),
+              content: Column(
+                children: [
+                  _buildTextField(nameController, 'Product Name'),
+                  _buildTextField(priceController, 'Price', isNumber: true),
+                  _buildTextField(stockController, 'Stock Quantity', isNumber: true),
+                  CupertinoTextField(
+                    controller: imageUrlController,
+                    placeholder: 'Image URL (optional)',
+                    onChanged: (value) {
+                      setState(() {}); // Rebuild UI when image URL changes
+                    },
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      border: Border.all(color: CupertinoColors.systemGrey),
+                      borderRadius: BorderRadius.circular(8),
+                    ),
                   ),
+                  const SizedBox(height: 10),
+                  imageUrlController.text.isNotEmpty
+                      ? SizedBox(
+                    height: 100,
+                    child: Image.network(
+                      imageUrlController.text,
+                      fit: BoxFit.cover,
+                      errorBuilder: (context, error, stackTrace) =>
+                      const Icon(CupertinoIcons.photo, size: 50),
+                    ),
+                  )
+                      : const Icon(CupertinoIcons.photo, size: 50),
+                ],
+              ),
+              actions: [
+                CupertinoDialogAction(
+                  child: const Text('Cancel'),
+                  onPressed: () => Navigator.pop(context),
                 ),
-            ],
-          ),
-        ),
-        actions: [
-          CupertinoDialogAction(
-            child: const Text('Cancel'),
-            onPressed: () => Navigator.pop(context),
-          ),
-          CupertinoActionSheetAction(
-            child: const Text('Save'),
-            onPressed: () async {
-              if (nameController.text.isEmpty ||
-                  priceController.text.isEmpty ||
-                  stockController.text.isEmpty) {
-                _showErrorDialog('Please fill all required fields');
-                return;
-              }
+                CupertinoDialogAction(
+                  child: const Text('Save'),
+                  onPressed: () async {
+                    if (nameController.text.isEmpty ||
+                        priceController.text.isEmpty ||
+                        stockController.text.isEmpty) {
+                      _showErrorDialog('Please fill all required fields');
+                      return;
+                    }
 
-              final updatedProduct = {
-                'name': nameController.text,
-                'price': double.tryParse(priceController.text) ?? 0.0,
-                'stock': int.tryParse(stockController.text) ?? 0,
-                'image_url': imageUrlController.text.isNotEmpty
-                    ? imageUrlController.text
-                    : null, // Send null if no URL provided
-              };
+                    final updatedProduct = {
+                      'name': nameController.text,
+                      'price': double.tryParse(priceController.text) ?? 0.0,
+                      'stock': int.tryParse(stockController.text) ?? 0,
+                      'image_path': imageUrlController.text.isNotEmpty
+                          ? imageUrlController.text
+                          : null,
+                    };
 
-              await _updateProduct(product.id, updatedProduct);
-              Navigator.pop(context);
-            },
-          ),
-        ],
-      ),
+                    await _updateProduct(product.id, updatedProduct);
+                    // ignore: use_build_context_synchronously
+                    Navigator.pop(context);
+                  },
+                ),
+              ],
+            );
+          },
+        );
+      },
     );
   }
+
+
+
+
+
 
   Widget _buildTextField(TextEditingController controller, String placeholder,
       {bool isNumber = false}) {
@@ -300,12 +333,12 @@ class _ProductsScreenState extends State<ProductsScreen> {
             onPressed: () => Navigator.pop(context),
           ),
           CupertinoDialogAction(
-            child: const Text('Delete'),
             isDestructiveAction: true,
             onPressed: () async {
               Navigator.pop(context);
               await _deleteProduct(product.id);
             },
+            child: const Text('Delete'),
           ),
         ],
       ),
@@ -380,6 +413,7 @@ class _ProductsScreenState extends State<ProductsScreen> {
     );
   }
 
+
   @override
   Widget build(BuildContext context) {
     return CupertinoPageScaffold(
@@ -388,7 +422,7 @@ class _ProductsScreenState extends State<ProductsScreen> {
         trailing: CupertinoButton(
           padding: EdgeInsets.zero,
           onPressed: _showProductManagementMenu,
-          child: const Icon(CupertinoIcons.add),
+          child: const Icon(CupertinoIcons.line_horizontal_3),
         ),
       ),
       child: _isLoading
@@ -401,6 +435,8 @@ class _ProductsScreenState extends State<ProductsScreen> {
               onRefresh: () async => _fetchProducts(showLoading: true),
             ),
             SliverToBoxAdapter(child: SizedBox(height: 32)),
+            // Added padding here
+            SliverToBoxAdapter(child: SizedBox(height: 20)), // This creates spacing before the grid
             SliverGrid(
               gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
                 crossAxisCount: _getGridItemCount(context),
@@ -419,6 +455,7 @@ class _ProductsScreenState extends State<ProductsScreen> {
       ),
     );
   }
+
 
   int _getGridItemCount(BuildContext context) {
     double screenWidth = MediaQuery.of(context).size.width;
@@ -498,7 +535,7 @@ class _ProductsScreenState extends State<ProductsScreen> {
                     product.name,
                     style: const TextStyle(
                       fontWeight: FontWeight.bold,
-                      fontSize: 18,
+                      fontSize: 14,
                     ),
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
@@ -509,7 +546,7 @@ class _ProductsScreenState extends State<ProductsScreen> {
                     style: TextStyle(
                       color: CupertinoTheme.of(context).primaryColor,
                       fontWeight: FontWeight.bold,
-                      fontSize: 18,
+                      fontSize: 11,
                     ),
                   ),
                   const SizedBox(height: 8),
@@ -526,7 +563,7 @@ class _ProductsScreenState extends State<ProductsScreen> {
                         style: TextStyle(
                           color: stockColor,
                           fontWeight: FontWeight.w500,
-                          fontSize: 16,
+                          fontSize: 10,
                         ),
                       ),
                     ],
